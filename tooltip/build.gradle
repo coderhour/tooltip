@@ -33,7 +33,7 @@ android {
     }
 }
 
-def libVer = "1.1"
+def libVer = "1.2"
 def libName = "tooltip"
 
 group = "com.coderhour"
@@ -67,6 +67,7 @@ install {
             developers {
                 developer {
                     name 'Coderhour'
+                    email 'coderhour@gmail.com'
                 }
             }
         }
@@ -85,6 +86,7 @@ bintray {
         version {
             name = libVer
             released = new Date()
+            vcsTag = libVer
             gpg {
                 sign = true
                 passphrase = System.getenv('GPG_PASSPHRASE')

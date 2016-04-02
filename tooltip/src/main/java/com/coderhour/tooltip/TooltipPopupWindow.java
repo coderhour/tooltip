@@ -1,6 +1,8 @@
 package com.coderhour.tooltip;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RotateDrawable;
@@ -20,22 +22,22 @@ import android.widget.PopupWindow;
 public class TooltipPopupWindow extends PopupWindow {
 
     /**
-     * {@value #POS_LEFT} The tooltip will show to the left of the anchor view.
+     * {@value #POS_LEFT} The tooltip will show to the left of the anchor view / RectF / Rect.
      */
     public static final int POS_LEFT = 0;
 
     /**
-     * {@value #POS_RIGHT} The tooltip will show to the right of the anchor view.
+     * {@value #POS_RIGHT} The tooltip will show to the right of the anchor view / RectF / Rect.
      */
     public static final int POS_RIGHT = 1;
 
     /**
-     * {@value #POS_ABOVE} The tooltip will show above of the anchor view.
+     * {@value #POS_ABOVE} The tooltip will show above of the anchor view / RectF / Rect.
      */
     public static final int POS_ABOVE = 2;
 
     /**
-     * {@value #POS_BELOW} The tooltip will show below of the anchor view.
+     * {@value #POS_BELOW} The tooltip will show below of the anchor view / RectF / Rect.
      */
     public static final int POS_BELOW = 3;
 
@@ -44,6 +46,8 @@ public class TooltipPopupWindow extends PopupWindow {
     private int mX, mY;
     private int mPos = -1;
     private View mOriginalView;
+    private View mAnchorView;
+    private Rect mRect;
 
     public TooltipPopupWindow(Context context) {
         super(context);
@@ -89,13 +93,11 @@ public class TooltipPopupWindow extends PopupWindow {
     public TooltipPopupWindow setBackgroundColor(int color) {
         LayerDrawable drawableTriangle = (LayerDrawable) mImageView.getBackground();
         GradientDrawable shapeTriangle = (GradientDrawable) (((RotateDrawable) drawableTriangle.findDrawableByLayerId(R.id.shape_id)).getDrawable());
-        if (shapeTriangle != null)
-        {
+        if (shapeTriangle != null) {
             shapeTriangle.setColor(color);
         }
         GradientDrawable drawableRound = (GradientDrawable) mOriginalView.getBackground();
-        if (drawableRound != null)
-        {
+        if (drawableRound != null) {
             drawableRound.setColor(color);
         }
         return this;
@@ -115,7 +117,7 @@ public class TooltipPopupWindow extends PopupWindow {
     /**
      * Set the window position.
      * <p>
-     *    This method should be called immediately after the instance created and the content view has been set.
+     * This method should be called immediately after the instance created and the content view has been set.
      * </p>
      *
      * @param pos The position of the tooltip related to the anchor view. Please see {@link #POS_LEFT}, {@link #POS_RIGHT}, {@link #POS_ABOVE} and {@link #POS_BELOW}.
@@ -132,7 +134,7 @@ public class TooltipPopupWindow extends PopupWindow {
         LinearLayout.LayoutParams ivParams = new LinearLayout.LayoutParams(
                 64, 64);
         if (mOriginalView.getParent() != null) {
-            ((LinearLayout)mOriginalView.getParent()).removeAllViews();
+            ((LinearLayout) mOriginalView.getParent()).removeAllViews();
         }
         if (pos == POS_LEFT) {
             mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -175,48 +177,65 @@ public class TooltipPopupWindow extends PopupWindow {
     /**
      * Set the anchor view.
      * <p>
-     *     The popup window will be show related to the position of the anchor view.
+     * The popup window will be show related to the position of the anchor view.
      * </p>
      *
      * @param anchorView The anchor view
      * @return The current window.
      */
     public TooltipPopupWindow setAnchorView(View anchorView) {
-        mLinearLayout.setPadding(0, 0, 0, 0);
-        mLinearLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        if (mPos == -1) {
-            throw new IllegalStateException("Pleas call setWindowPosition first.");
+        mAnchorView = anchorView;
+        if (mRect != null) {
+            throw new IllegalStateException("Can't call setAnchorView and setRectF at the same time.");
         }
         int[] loc = new int[2];
         anchorView.getLocationOnScreen(loc);
-        if (mPos == POS_LEFT) {
-            mX = loc[0] - mLinearLayout.getMeasuredWidth() + anchorView.getPaddingLeft();
-            mY = loc[1] + anchorView.getPaddingTop() - mLinearLayout.getMeasuredHeight() / 2 + anchorView.getHeight() / 2;
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
-            params.topMargin = loc[1] - mY + anchorView.getHeight() / 2 - mImageView.getMeasuredHeight() / 2;
-        } else if (mPos == POS_ABOVE) {
-            mX = loc[0] + anchorView.getPaddingLeft() - mLinearLayout.getMeasuredWidth() / 2 + anchorView.getWidth() / 2;
-            mY = loc[1] - mLinearLayout.getMeasuredHeight() - anchorView.getPaddingTop();
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
-            params.leftMargin = loc[0] - mX + anchorView.getWidth() / 2 - mImageView.getMeasuredWidth() / 2;
-        } else if (mPos == POS_RIGHT) {
-            mX = loc[0] + anchorView.getWidth() - anchorView.getPaddingRight();
-            mY = loc[1] + anchorView.getPaddingTop() - mLinearLayout.getMeasuredHeight() / 2 + anchorView.getHeight() / 2;
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
-            params.topMargin = loc[1] - mY + anchorView.getHeight() / 2 - mImageView.getMeasuredHeight() / 2;
-        } else if (mPos == POS_BELOW) {
-            mX = loc[0] + anchorView.getPaddingLeft() - mLinearLayout.getMeasuredWidth() / 2 + anchorView.getWidth() / 2;
-            mY = loc[1] + anchorView.getHeight() - anchorView.getPaddingBottom();
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
-            params.leftMargin = loc[0] - mX + anchorView.getWidth() / 2 - mImageView.getMeasuredWidth() / 2;
+        int left = loc[0] + anchorView.getPaddingLeft();
+        int top = loc[1] + anchorView.getPaddingTop();
+        int right = loc[0] + anchorView.getWidth() - anchorView.getPaddingRight();
+        int bottom = loc[1] + anchorView.getHeight() - anchorView.getPaddingBottom();
+        relocation(new Rect(left, top, right, bottom));
+        return this;
+    }
+
+    /**
+     * Set the RectF of the position.
+     * <p>
+     * The popup window will be show related to the RectF.
+     * </p>
+     *
+     * @param rectF The RectF
+     * @return
+     */
+    public TooltipPopupWindow setRectF(RectF rectF) {
+        if (mAnchorView != null) {
+            throw new IllegalStateException("Can't call setAnchorView and setRectF at the same time.");
         }
+        mRect = new Rect();
+        rectF.round(mRect);
+        relocation(mRect);
+        return this;
+    }
+
+    /**
+     * Set the Rect of the position.
+     * <p>
+     * The popup window will be show related to the Rect.
+     * </p>
+     *
+     * @param rect The Rect
+     * @return
+     */
+    public TooltipPopupWindow setRect(Rect rect) {
+        mRect = rect;
+        relocation(mRect);
         return this;
     }
 
     /**
      * Set outside touchable.
      * <p>
-     *     The same with {@link #setOutsideTouchable(boolean)} but it's chainable.
+     * The same with {@link #setOutsideTouchable(boolean)} but it's chainable.
      * </p>
      *
      * @param touchable the window will dismiss when user click outside if set to true.
@@ -229,10 +248,50 @@ public class TooltipPopupWindow extends PopupWindow {
 
     /**
      * Show the popup window.
+     *
      * @param parent Parent of the popup window.
      */
     public void show(View parent) {
         super.showAtLocation(parent, Gravity.TOP | Gravity.LEFT, mX, mY);
+    }
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+        mLinearLayout = null;
+        mImageView = null;
+        mOriginalView = null;
+        mAnchorView = null;
+        mRect = null;
+    }
+
+    private void relocation(Rect rect) {
+        mLinearLayout.setPadding(0, 0, 0, 0);
+        mLinearLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        if (mPos == -1) {
+            throw new IllegalStateException("Pleas call setWindowPosition first.");
+        }
+        if (mPos == POS_LEFT) {
+            mX = rect.left - mLinearLayout.getMeasuredWidth();
+            mY = rect.centerY() - mLinearLayout.getMeasuredHeight() / 2;
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
+            params.topMargin = rect.centerY() - mY - mImageView.getMeasuredHeight() / 2;
+        } else if (mPos == POS_ABOVE) {
+            mX = rect.centerX() - mLinearLayout.getMeasuredWidth() / 2;
+            mY = rect.top - mLinearLayout.getMeasuredHeight();
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
+            params.leftMargin = rect.centerX() - mX - mImageView.getMeasuredWidth() / 2;
+        } else if (mPos == POS_RIGHT) {
+            mX = rect.right;
+            mY = rect.centerY() - mLinearLayout.getMeasuredHeight() / 2;
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
+            params.topMargin = rect.centerY() - mY - mImageView.getMeasuredHeight() / 2;
+        } else if (mPos == POS_BELOW) {
+            mX = rect.centerX() - mLinearLayout.getMeasuredWidth() / 2;
+            mY = rect.bottom;
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
+            params.leftMargin = rect.centerX() - mX - mImageView.getMeasuredWidth() / 2;
+        }
     }
 
 }
