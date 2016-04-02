@@ -205,7 +205,7 @@ public class TooltipPopupWindow extends PopupWindow {
      * </p>
      *
      * @param rectF The RectF
-     * @return
+     * @return The current window
      */
     public TooltipPopupWindow setRectF(RectF rectF) {
         if (mAnchorView != null) {
@@ -224,7 +224,7 @@ public class TooltipPopupWindow extends PopupWindow {
      * </p>
      *
      * @param rect The Rect
-     * @return
+     * @return The current window
      */
     public TooltipPopupWindow setRect(Rect rect) {
         mRect = rect;

@@ -109,6 +109,8 @@ task sourcesJar(type: Jar) {
 task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.links("${System.getenv('ANDROID_HOME')}/docs/reference")
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
