@@ -1,4 +1,19 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
+    }
+}
+
+plugins {
+    id "com.jfrog.bintray" version "1.6"
+}
+
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 23
@@ -18,8 +33,87 @@ android {
     }
 }
 
+def libVer = "1.1"
+def libName = "tooltip"
+
+group = "com.coderhour"
+version = libVer
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name libName
+            description 'A Tooltip PopupWindow For Android.'
+            url 'https://github.com/coderhour/tooltip'
+            inceptionYear '2016'
+
+            packaging 'aar'
+            groupId 'com.coderhour'
+            artifactId libName
+            version libVer
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+            scm {
+                connection 'https://github.com/coderhour/tooltip.git'
+                url 'https://github.com/coderhour/tooltip'
+
+            }
+            developers {
+                developer {
+                    name 'Coderhour'
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    pkg {
+        repo = 'maven'
+        name = libName
+        licenses = ['Apache-2.0']
+        vcsUrl = "https://github.com/coderhour/tooltip.git"
+        version {
+            name = libVer
+            released = new Date()
+            gpg {
+                sign = true
+                passphrase = System.getenv('GPG_PASSPHRASE')
+            }
+        }
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.0'
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
 }

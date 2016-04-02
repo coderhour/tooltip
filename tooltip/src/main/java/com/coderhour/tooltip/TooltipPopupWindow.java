@@ -19,10 +19,25 @@ import android.widget.PopupWindow;
  */
 public class TooltipPopupWindow extends PopupWindow {
 
+    /**
+     * {@value #POS_LEFT} The tooltip will show to the left of the anchor view.
+     */
     public static final int POS_LEFT = 0;
+
+    /**
+     * {@value #POS_RIGHT} The tooltip will show to the right of the anchor view.
+     */
     public static final int POS_RIGHT = 1;
-    public static final int POS_TOP = 2;
-    public static final int POS_BOTTOM = 3;
+
+    /**
+     * {@value #POS_ABOVE} The tooltip will show above of the anchor view.
+     */
+    public static final int POS_ABOVE = 2;
+
+    /**
+     * {@value #POS_BELOW} The tooltip will show below of the anchor view.
+     */
+    public static final int POS_BELOW = 3;
 
     private LinearLayout mLinearLayout;
     private ImageView mImageView;
@@ -65,6 +80,12 @@ public class TooltipPopupWindow extends PopupWindow {
         super(contentView, width, height, focusable);
     }
 
+    /**
+     * Set the background color of the content view.
+     *
+     * @param color Color code
+     * @return The current window
+     */
     public TooltipPopupWindow setBackgroundColor(int color) {
         LayerDrawable drawableTriangle = (LayerDrawable) mImageView.getBackground();
         GradientDrawable shapeTriangle = (GradientDrawable) (((RotateDrawable) drawableTriangle.findDrawableByLayerId(R.id.shape_id)).getDrawable());
@@ -80,11 +101,26 @@ public class TooltipPopupWindow extends PopupWindow {
         return this;
     }
 
+    /**
+     * Set the background color of the content view with color resource ID.
+     *
+     * @param colorRes The color resource ID
+     * @return The current window
+     */
     public TooltipPopupWindow setBackgroundColorResource(int colorRes) {
         setBackgroundColor(ContextCompat.getColor(getContentView().getContext(), colorRes));
         return this;
     }
 
+    /**
+     * Set the window position.
+     * <p>
+     *    This method should be called immediately after the instance created and the content view has been set.
+     * </p>
+     *
+     * @param pos The position of the tooltip related to the anchor view. Please see {@link #POS_LEFT}, {@link #POS_RIGHT}, {@link #POS_ABOVE} and {@link #POS_BELOW}.
+     * @return The current window
+     */
     public TooltipPopupWindow setWindowPosition(int pos) {
         mPos = pos;
         mOriginalView = getContentView();
@@ -104,7 +140,7 @@ public class TooltipPopupWindow extends PopupWindow {
 
             mImageView.setBackgroundResource(R.drawable.tooltip_triangle_left);
             mLinearLayout.addView(mImageView, ivParams);
-        } else if (pos == POS_TOP) {
+        } else if (pos == POS_ABOVE) {
             // W/A Start
             mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
             mLinearLayout.addView(mOriginalView);
@@ -124,7 +160,7 @@ public class TooltipPopupWindow extends PopupWindow {
             mLinearLayout.addView(mImageView, ivParams);
 
             mLinearLayout.addView(mOriginalView, params);
-        } else if (pos == POS_BOTTOM) {
+        } else if (pos == POS_BELOW) {
             mLinearLayout.setOrientation(LinearLayout.VERTICAL);
 
             mImageView.setBackgroundResource(R.drawable.tooltip_triangle_bottom);
@@ -136,6 +172,15 @@ public class TooltipPopupWindow extends PopupWindow {
         return this;
     }
 
+    /**
+     * Set the anchor view.
+     * <p>
+     *     The popup window will be show related to the position of the anchor view.
+     * </p>
+     *
+     * @param anchorView The anchor view
+     * @return The current window.
+     */
     public TooltipPopupWindow setAnchorView(View anchorView) {
         mLinearLayout.setPadding(0, 0, 0, 0);
         mLinearLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
@@ -149,7 +194,7 @@ public class TooltipPopupWindow extends PopupWindow {
             mY = loc[1] + anchorView.getPaddingTop() - mLinearLayout.getMeasuredHeight() / 2 + anchorView.getHeight() / 2;
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.topMargin = loc[1] - mY + anchorView.getHeight() / 2 - mImageView.getMeasuredHeight() / 2;
-        } else if (mPos == POS_TOP) {
+        } else if (mPos == POS_ABOVE) {
             mX = loc[0] + anchorView.getPaddingLeft() - mLinearLayout.getMeasuredWidth() / 2 + anchorView.getWidth() / 2;
             mY = loc[1] - mLinearLayout.getMeasuredHeight() - anchorView.getPaddingTop();
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
@@ -159,7 +204,7 @@ public class TooltipPopupWindow extends PopupWindow {
             mY = loc[1] + anchorView.getPaddingTop() - mLinearLayout.getMeasuredHeight() / 2 + anchorView.getHeight() / 2;
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.topMargin = loc[1] - mY + anchorView.getHeight() / 2 - mImageView.getMeasuredHeight() / 2;
-        } else if (mPos == POS_BOTTOM) {
+        } else if (mPos == POS_BELOW) {
             mX = loc[0] + anchorView.getPaddingLeft() - mLinearLayout.getMeasuredWidth() / 2 + anchorView.getWidth() / 2;
             mY = loc[1] + anchorView.getHeight() - anchorView.getPaddingBottom();
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
@@ -168,11 +213,24 @@ public class TooltipPopupWindow extends PopupWindow {
         return this;
     }
 
+    /**
+     * Set outside touchable.
+     * <p>
+     *     The same with {@link #setOutsideTouchable(boolean)} but it's chainable.
+     * </p>
+     *
+     * @param touchable the window will dismiss when user click outside if set to true.
+     * @return The current window
+     */
     public TooltipPopupWindow setOutsideTouchableChain(boolean touchable) {
         super.setOutsideTouchable(touchable);
         return this;
     }
 
+    /**
+     * Show the popup window.
+     * @param parent Parent of the popup window.
+     */
     public void show(View parent) {
         super.showAtLocation(parent, Gravity.TOP | Gravity.LEFT, mX, mY);
     }

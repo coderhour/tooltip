@@ -3,7 +3,6 @@ package com.coderhour.tooltippopupwindow;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -59,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (view.getId() == R.id.btnTop) {
             new TooltipPopupWindow(mContentView, WindowManager.LayoutParams.WRAP_CONTENT,
                     WindowManager.LayoutParams.WRAP_CONTENT)
-                    .setWindowPosition(TooltipPopupWindow.POS_TOP)
+                    .setWindowPosition(TooltipPopupWindow.POS_ABOVE)
                     .setAnchorView(mBtnTop)
                     .setOutsideTouchableChain(true)
                     .show(getWindow().getDecorView());
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (view.getId() == R.id.btnBottom) {
             new TooltipPopupWindow(mContentView, WindowManager.LayoutParams.WRAP_CONTENT,
                     WindowManager.LayoutParams.WRAP_CONTENT)
-                    .setWindowPosition(TooltipPopupWindow.POS_BOTTOM)
+                    .setWindowPosition(TooltipPopupWindow.POS_BELOW)
                     .setAnchorView(mBtnBottom)
                     .setOutsideTouchableChain(true)
                     .setBackgroundColor(Color.CYAN)
