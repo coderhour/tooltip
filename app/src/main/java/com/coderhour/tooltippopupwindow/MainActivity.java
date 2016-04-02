@@ -1,5 +1,6 @@
 package com.coderhour.tooltippopupwindow;
 
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .setWindowPosition(TooltipPopupWindow.POS_BOTTOM)
                     .setAnchorView(mBtnBottom)
                     .setOutsideTouchableChain(true)
+                    .setBackgroundColor(Color.CYAN)
                     .show(getWindow().getDecorView());
         }
 

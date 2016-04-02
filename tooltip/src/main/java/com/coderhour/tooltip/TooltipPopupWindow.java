@@ -1,6 +1,10 @@
 package com.coderhour.tooltip;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.RotateDrawable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -10,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 /**
- * @author blade
+ * @author coderhour
  * @version 1.0: 4/1/16
  */
 public class TooltipPopupWindow extends PopupWindow {
@@ -62,10 +66,22 @@ public class TooltipPopupWindow extends PopupWindow {
     }
 
     public TooltipPopupWindow setBackgroundColor(int color) {
+        LayerDrawable drawableTriangle = (LayerDrawable) mImageView.getBackground();
+        GradientDrawable shapeTriangle = (GradientDrawable) (((RotateDrawable) drawableTriangle.findDrawableByLayerId(R.id.shape_id)).getDrawable());
+        if (shapeTriangle != null)
+        {
+            shapeTriangle.setColor(color);
+        }
+        GradientDrawable drawableRound = (GradientDrawable) mOriginalView.getBackground();
+        if (drawableRound != null)
+        {
+            drawableRound.setColor(color);
+        }
         return this;
     }
 
     public TooltipPopupWindow setBackgroundColorResource(int colorRes) {
+        setBackgroundColor(ContextCompat.getColor(getContentView().getContext(), colorRes));
         return this;
     }
 
@@ -74,7 +90,7 @@ public class TooltipPopupWindow extends PopupWindow {
         mOriginalView = getContentView();
         mLinearLayout = new LinearLayout(mOriginalView.getContext());
         mImageView = new ImageView(mOriginalView.getContext());
-        mOriginalView.setBackgroundResource(R.drawable.round_corner_background);
+        mOriginalView.setBackgroundResource(R.drawable.tooltip_round_corner_bg);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         LinearLayout.LayoutParams ivParams = new LinearLayout.LayoutParams(
@@ -86,36 +102,32 @@ public class TooltipPopupWindow extends PopupWindow {
             mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
             mLinearLayout.addView(mOriginalView);
 
-            mImageView.setBackgroundResource(R.drawable.triangle_left);
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_left);
             mLinearLayout.addView(mImageView, ivParams);
         } else if (pos == POS_TOP) {
             // W/A Start
             mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
             mLinearLayout.addView(mOriginalView);
 
-            mImageView.setBackgroundResource(R.drawable.triangle_left);
-            mLinearLayout.addView(mImageView, ivParams);
-
-            mLinearLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             mLinearLayout.removeAllViews();
             // W/A End
 
             mLinearLayout.setOrientation(LinearLayout.VERTICAL);
             mLinearLayout.addView(mOriginalView);
 
-            mImageView.setBackgroundResource(R.drawable.triangle_top);
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_top);
             mLinearLayout.addView(mImageView, ivParams);
         } else if (pos == POS_RIGHT) {
             mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
 
-            mImageView.setBackgroundResource(R.drawable.triangle_right);
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_right);
             mLinearLayout.addView(mImageView, ivParams);
 
             mLinearLayout.addView(mOriginalView, params);
         } else if (pos == POS_BOTTOM) {
             mLinearLayout.setOrientation(LinearLayout.VERTICAL);
 
-            mImageView.setBackgroundResource(R.drawable.triangle_bottom);
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_bottom);
             mLinearLayout.addView(mImageView, ivParams);
 
             mLinearLayout.addView(mOriginalView, params);
