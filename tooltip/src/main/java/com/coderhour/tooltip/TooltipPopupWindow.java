@@ -41,6 +41,11 @@ public class TooltipPopupWindow extends PopupWindow {
      */
     public static final int POS_BELOW = 3;
 
+    /**
+     * {@value #POS_AUTO} The tooltip will show automatically according to the anchor view / RectF / Rect.
+     */
+    public static final int POS_AUTO = 4;
+
     private LinearLayout mLinearLayout;
     private ImageView mImageView;
     private int mX, mY;
@@ -117,7 +122,7 @@ public class TooltipPopupWindow extends PopupWindow {
     /**
      * Set the window position.
      * <p>
-     * This method should be called immediately after the instance created and the content view has been set.
+     * This method should be called before show.
      * </p>
      *
      * @param pos The position of the tooltip related to the anchor view. Please see {@link #POS_LEFT}, {@link #POS_RIGHT}, {@link #POS_ABOVE} and {@link #POS_BELOW}.
@@ -125,52 +130,6 @@ public class TooltipPopupWindow extends PopupWindow {
      */
     public TooltipPopupWindow setWindowPosition(int pos) {
         mPos = pos;
-        mOriginalView = getContentView();
-        mLinearLayout = new LinearLayout(mOriginalView.getContext());
-        mImageView = new ImageView(mOriginalView.getContext());
-        mOriginalView.setBackgroundResource(R.drawable.tooltip_round_corner_bg);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        LinearLayout.LayoutParams ivParams = new LinearLayout.LayoutParams(
-                64, 64);
-        if (mOriginalView.getParent() != null) {
-            ((LinearLayout) mOriginalView.getParent()).removeAllViews();
-        }
-        if (pos == POS_LEFT) {
-            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-            mLinearLayout.addView(mOriginalView);
-
-            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_left);
-            mLinearLayout.addView(mImageView, ivParams);
-        } else if (pos == POS_ABOVE) {
-            // W/A Start
-            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-            mLinearLayout.addView(mOriginalView);
-
-            mLinearLayout.removeAllViews();
-            // W/A End
-
-            mLinearLayout.setOrientation(LinearLayout.VERTICAL);
-            mLinearLayout.addView(mOriginalView);
-
-            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_top);
-            mLinearLayout.addView(mImageView, ivParams);
-        } else if (pos == POS_RIGHT) {
-            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-
-            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_right);
-            mLinearLayout.addView(mImageView, ivParams);
-
-            mLinearLayout.addView(mOriginalView, params);
-        } else if (pos == POS_BELOW) {
-            mLinearLayout.setOrientation(LinearLayout.VERTICAL);
-
-            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_bottom);
-            mLinearLayout.addView(mImageView, ivParams);
-
-            mLinearLayout.addView(mOriginalView, params);
-        }
-        setContentView(mLinearLayout);
         return this;
     }
 
@@ -266,6 +225,10 @@ public class TooltipPopupWindow extends PopupWindow {
     }
 
     private void relocation(Rect rect) {
+        mOriginalView = getContentView();
+        int screenWidth = mOriginalView.getContext().getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = mOriginalView.getContext().getResources().getDisplayMetrics().heightPixels;
+        relayout(rect, screenWidth, screenHeight);
         mLinearLayout.setPadding(0, 0, 0, 0);
         mLinearLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         if (mPos == -1) {
@@ -274,24 +237,122 @@ public class TooltipPopupWindow extends PopupWindow {
         if (mPos == POS_LEFT) {
             mX = rect.left - mLinearLayout.getMeasuredWidth();
             mY = rect.centerY() - mLinearLayout.getMeasuredHeight() / 2;
+            if (mY < 0) {
+                mY = 0;
+            } else if (screenHeight - mY < mLinearLayout.getMeasuredHeight()) {
+                mY = screenHeight - mLinearLayout.getMeasuredHeight();
+            }
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.topMargin = rect.centerY() - mY - mImageView.getMeasuredHeight() / 2;
         } else if (mPos == POS_ABOVE) {
             mX = rect.centerX() - mLinearLayout.getMeasuredWidth() / 2;
+            if (mX < 0) {
+                mX = 0;
+            } else if (screenWidth - mX < mLinearLayout.getMeasuredWidth()) {
+                mX = screenWidth - mLinearLayout.getMeasuredWidth();
+            }
             mY = rect.top - mLinearLayout.getMeasuredHeight();
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.leftMargin = rect.centerX() - mX - mImageView.getMeasuredWidth() / 2;
         } else if (mPos == POS_RIGHT) {
             mX = rect.right;
             mY = rect.centerY() - mLinearLayout.getMeasuredHeight() / 2;
+            if (mY < 0) {
+                mY = 0;
+            } else if (screenHeight - mY < mLinearLayout.getMeasuredHeight()) {
+                mY = screenHeight - mLinearLayout.getMeasuredHeight();
+            }
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.topMargin = rect.centerY() - mY - mImageView.getMeasuredHeight() / 2;
         } else if (mPos == POS_BELOW) {
             mX = rect.centerX() - mLinearLayout.getMeasuredWidth() / 2;
             mY = rect.bottom;
+            if (mX < 0) {
+                mX = 0;
+            } else if (screenWidth - mX < mLinearLayout.getMeasuredWidth()) {
+                mX = screenWidth - mLinearLayout.getMeasuredWidth();
+            }
             LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mImageView.getLayoutParams();
             params.leftMargin = rect.centerX() - mX - mImageView.getMeasuredWidth() / 2;
         }
+    }
+
+    private void relayout(Rect rect, int screenWidth, int screenHeight) {
+        if (mPos == POS_AUTO) {
+            mOriginalView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            int originalViewWidth = mOriginalView.getMeasuredWidth();
+            int originalViewHeight = mOriginalView.getMeasuredHeight();
+
+            int upSpace = rect.top - originalViewHeight;
+            int downSpace = screenHeight - rect.bottom - originalViewHeight;
+            if (upSpace > 0 || downSpace > 0) {
+                if (upSpace > downSpace) {
+                    mPos = POS_ABOVE;
+                } else {
+                    mPos = POS_BELOW;
+                }
+            } else {
+                int leftSpace = rect.left - originalViewWidth;
+                int rightSpace = screenWidth - rect.right - originalViewWidth;
+                if (leftSpace > 0 || rightSpace > 0) {
+                    if (leftSpace > rightSpace) {
+                        mPos = POS_LEFT;
+                    } else {
+                        mPos = POS_RIGHT;
+                    }
+                }
+            }
+        }
+        if (mPos == POS_AUTO) {
+            mPos = POS_ABOVE;
+        }
+        mLinearLayout = new LinearLayout(mOriginalView.getContext());
+        mImageView = new ImageView(mOriginalView.getContext());
+        mOriginalView.setBackgroundResource(R.drawable.tooltip_round_corner_bg);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams ivParams = new LinearLayout.LayoutParams(
+                64, 64);
+        if (mOriginalView.getParent() != null) {
+            ((LinearLayout) mOriginalView.getParent()).removeAllViews();
+        }
+        if (mPos == POS_LEFT) {
+            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+            mLinearLayout.addView(mOriginalView);
+
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_left);
+            mLinearLayout.addView(mImageView, ivParams);
+        } else if (mPos == POS_ABOVE) {
+            // W/A Start
+            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+            mLinearLayout.addView(mOriginalView);
+
+            mLinearLayout.removeAllViews();
+            // W/A End
+
+            mLinearLayout.setOrientation(LinearLayout.VERTICAL);
+            mLinearLayout.addView(mOriginalView);
+
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_top);
+            mLinearLayout.addView(mImageView, ivParams);
+        } else if (mPos == POS_RIGHT) {
+            mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_right);
+            mLinearLayout.addView(mImageView, ivParams);
+
+            mLinearLayout.addView(mOriginalView, params);
+        } else if (mPos == POS_BELOW) {
+            mLinearLayout.setOrientation(LinearLayout.VERTICAL);
+
+            mImageView.setBackgroundResource(R.drawable.tooltip_triangle_bottom);
+            mLinearLayout.addView(mImageView, ivParams);
+
+            mLinearLayout.addView(mOriginalView, params);
+        } else if (mPos == POS_AUTO) {
+
+        }
+        setContentView(mLinearLayout);
     }
 
 }
