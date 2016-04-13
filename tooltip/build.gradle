@@ -33,7 +33,7 @@ android {
     }
 }
 
-def libVer = "1.2"
+def libVer = "1.3"
 def libName = "tooltip"
 
 group = "com.coderhour"
